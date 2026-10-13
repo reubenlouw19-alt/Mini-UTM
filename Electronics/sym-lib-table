@@ -1,0 +1,4 @@
+(sym_lib_table
+  (version 7)
+  (lib (name "MyModules")(type "KiCad")(uri "${KIPRJMOD}/MyModules.kicad_sym")(options "")(descr "Custom symbols for Mini-UTM modules"))
+)
