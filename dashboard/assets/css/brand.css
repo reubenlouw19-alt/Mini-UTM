@@ -1,0 +1,61 @@
+/* ==========================================================
+   Stellenbosch University brand basics
+   Source: stellenbosch-university-brand-manual.pdf (4.2, 4.3)
+   Deliberately minimal - everything else is stock Bootstrap.
+   Load AFTER bootstrap.min.css.
+   ========================================================== */
+
+:root {
+  --su-maroon: #61223B;   /* Confident Maroon - primary */
+  --su-gold:   #CAA258;   /* Brilliant Gold - accent */
+  --su-eng:    #EBA900;   /* Engineering faculty */
+
+  --bs-body-font-family: 'Raleway', 'Trebuchet MS', system-ui, sans-serif;
+  --bs-body-color: #2C2A29;   /* Process Black */
+}
+
+body { font-family: var(--bs-body-font-family); }
+
+/* Headings in Confident Maroon (4.3.2) */
+h1, h2, h3, h4, h5, h6,
+.card-header { color: var(--su-maroon); }
+
+/* Navbar: maroon with a gold rule */
+.navbar-su {
+  background-color: var(--su-maroon);
+  border-bottom: 4px solid var(--su-gold);
+}
+
+.navbar-su .navbar-brand { font-weight: 700; font-size: 1.35rem; }
+
+/* Faculty colour, used only as a light accent */
+.stat-card { border-top: 3px solid var(--su-eng); }
+
+/* Primary action button in brand maroon */
+.btn-primary {
+  --bs-btn-bg: var(--su-maroon);
+  --bs-btn-border-color: var(--su-maroon);
+  --bs-btn-hover-bg: #4E1B2F;
+  --bs-btn-hover-border-color: #4E1B2F;
+  --bs-btn-active-bg: #3F1626;
+  --bs-btn-active-border-color: #3F1626;
+}
+
+/* Speed-up button in the Engineering faculty colour */
+.btn-eng {
+  --bs-btn-color: #2C2A29;
+  --bs-btn-bg: var(--su-eng);
+  --bs-btn-border-color: var(--su-eng);
+  --bs-btn-hover-color: #2C2A29;
+  --bs-btn-hover-bg: #C99000;
+  --bs-btn-hover-border-color: #C99000;
+  --bs-btn-active-color: #2C2A29;
+  --bs-btn-active-bg: #A87800;
+  --bs-btn-active-border-color: #A87800;
+  --bs-btn-disabled-color: #2C2A29;
+  --bs-btn-disabled-bg: var(--su-eng);
+  --bs-btn-disabled-border-color: var(--su-eng);
+}
+
+/* Connection lamp sizing; colour class is set by the backend */
+#lamp { width: 10px; height: 10px; padding: 0; }

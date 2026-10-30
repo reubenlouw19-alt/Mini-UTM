@@ -1,0 +1,758 @@
+<!DOCTYPE html>
+<html data-bs-theme="light" lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
+    <title>Mini UTM Dashboard v3</title>
+    <link rel="stylesheet" href="assets/bootstrap/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Raleway:wght@400;500;600;700&amp;display=swap">
+    <link rel="stylesheet" href="assets/css/brand.css">
+</head>
+
+<body class="bg-body-tertiary">
+
+    <!-- ============ NAVBAR ============ -->
+    <nav class="navbar navbar-dark navbar-su py-2">
+        <div class="container-fluid d-flex align-items-center gap-3">
+            <img src="assets/img/su-logo-horizontal.svg" width="201" height="72" alt="Stellenbosch University">
+            <div class="me-auto">
+                <span class="navbar-brand mb-0 d-block">Miniature tension / compression testing rig</span>
+                <small class="text-white-50">Mechanical Project 478 &middot; Reuben Louw 26896850 &middot; Supervisor: Dr M Neaves &middot; 2026</small>
+            </div>
+            <div class="d-flex align-items-center gap-2">
+                <span class="badge rounded-pill bg-light" id="lamp">&nbsp;</span>
+                <span class="small text-white-50" id="linkText">Rig offline</span>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid py-3">
+
+        <!-- ============ ALERTS ============ -->
+        <div class="alert alert-danger d-none d-flex justify-content-between align-items-center" id="estopAlert">
+            <span><strong>E-STOP LATCHED.</strong> Motion stopped, motor still holding. Release the button, then press Resume.</span>
+            <button class="btn btn-sm btn-danger" id="resumeBtn" type="button">Resume</button>
+        </div>
+
+        <div class="row g-3">
+
+            <!-- ============ LEFT: SETUP + JOG ============ -->
+            <div class="col-lg-3">
+                <div class="card shadow-sm mb-3">
+                    <div class="card-header fw-semibold py-2"><span>Test setup</span></div>
+                    <div class="card-body py-2">
+                        <div class="mb-2">
+                            <label class="form-label small text-body-secondary mb-1" for="in-std">Standard</label>
+                            <select class="form-select form-select-sm" id="in-std">
+                                <option value="E8">ASTM E8/E8M &mdash; tensile, metallic</option>
+                                <option value="D638">ASTM D638 &mdash; tensile, polymer</option>
+                                <option value="E9">ASTM E9 &mdash; compression, metallic</option>
+                                <option value="D695">ASTM D695 &mdash; compression, polymer</option>
+                            </select>
+                        </div>
+                        <div class="row g-2 mb-1">
+                            <div class="col-6">
+                                <label class="form-label small text-body-secondary mb-1" for="in-W">Width</label>
+                                <div class="input-group input-group-sm"><input class="form-control" type="number" id="in-W" min="0" step="any" placeholder="&mdash;"><span class="input-group-text">mm</span></div>
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label small text-body-secondary mb-1" for="in-T">Thickness</label>
+                                <div class="input-group input-group-sm"><input class="form-control" type="number" id="in-T" min="0" step="any" placeholder="&mdash;"><span class="input-group-text">mm</span></div>
+                            </div>
+                        </div>
+                        <div class="row g-2 mb-2">
+                            <div class="col-6">
+                                <label class="form-label small text-body-secondary mb-1" for="in-L">Gauge length</label>
+                                <div class="input-group input-group-sm"><input class="form-control" type="number" id="in-L" min="0" step="any" placeholder="&mdash;"><span class="input-group-text">mm</span></div>
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label small text-body-secondary mb-1">Area <span class="fw-normal">(w &times; t)</span></label>
+                                <div class="input-group input-group-sm"><span class="form-control bg-body-secondary font-monospace" id="d-A">&mdash;</span><span class="input-group-text">mm&sup2;</span></div>
+                            </div>
+                        </div>
+                        <div class="mb-2">
+                            <label class="form-label small text-body-secondary mb-1">Crosshead speed <span class="fw-normal">(from the standard)</span></label>
+                            <div class="input-group input-group-sm">
+                                <span class="form-control bg-body-secondary font-monospace" id="d-S">&mdash;</span><span class="input-group-text">mm/min</span>
+                            </div>
+                        </div>
+                        <div class="mb-2">
+                            <label class="form-label small text-body-secondary mb-1">Post-yield speed <span class="fw-normal">(Speed up button)</span></label>
+                            <div class="input-group input-group-sm">
+                                <span class="form-control bg-body-secondary font-monospace" id="d-F">&mdash;</span><span class="input-group-text">mm/min</span>
+                            </div>
+                        </div>
+                        <div class="form-check form-switch mb-2">
+                            <input class="form-check-input" type="checkbox" role="switch" id="in-loop" checked>
+                            <label class="form-check-label small" for="in-loop">Closed-loop control (pot feedback)</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card shadow-sm">
+                    <div class="card-header fw-semibold py-2"><span>Jog</span></div>
+                    <div class="card-body py-2">
+                        <div class="row g-2 mb-2">
+                            <div class="col-6">
+                                <label class="form-label small text-body-secondary mb-1" for="in-jogstep">Step size</label>
+                                <div class="input-group input-group-sm"><input class="form-control" type="number" id="in-jogstep" min="0" max="50" step="any" value="0.05"><span class="input-group-text">mm</span></div>
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label small text-body-secondary mb-1" for="in-jogspeed">Jog speed</label>
+                                <div class="input-group input-group-sm"><input class="form-control" type="number" id="in-jogspeed" min="0" max="20" step="any" value="2"><span class="input-group-text">mm/min</span></div>
+                            </div>
+                        </div>
+                        <div class="btn-group btn-group-sm w-100 mb-2" role="group">
+                            <button class="btn btn-outline-primary" id="jogUp" type="button">&#9650; Jog up</button>
+                            <button class="btn btn-outline-primary" id="jogDown" type="button">&#9660; Jog down</button>
+                        </div>
+                        <div class="btn-group btn-group-sm w-100 mb-2" role="group">
+                            <button class="btn btn-outline-secondary" id="moveUp" type="button">&#9650; Move up</button>
+                            <button class="btn btn-outline-secondary" id="moveDown" type="button">&#9660; Move down</button>
+                        </div>
+                        <button class="btn btn-danger btn-sm w-100" id="stopBtn" type="button">Stop <span class="opacity-75">(Esc)</span></button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ============ CENTRE: MEASURED VALUES + CHART ============ -->
+            <div class="col-lg-6">
+                <div class="row g-3 mb-3">
+                    <div class="col-6">
+                        <div class="card stat-card shadow-sm">
+                            <div class="card-body py-2">
+                                <h6 class="card-subtitle small text-body-secondary">Force</h6>
+                                <p class="mb-0 card-text fs-2 fw-semibold"><span id="r-F">&mdash;</span> <small class="fs-6 text-body-secondary">N</small></p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="card stat-card shadow-sm">
+                            <div class="card-body py-2">
+                                <h6 class="card-subtitle small text-body-secondary">Extension <span class="fw-normal">(raw pot)</span></h6>
+                                <p class="mb-0 card-text fs-2 fw-semibold"><span id="r-d">&mdash;</span> <small class="fs-6 text-body-secondary">mm</small></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card shadow-sm">
+                    <div class="card-header d-flex justify-content-between align-items-center py-2">
+                        <span class="fw-semibold" id="chartTitle">Stress &ndash; strain</span>
+                        <span class="small text-body-secondary" id="sampleCount">0 samples</span>
+                    </div>
+                    <div class="card-body py-2">
+                        <canvas id="chart" height="260"></canvas>
+                    </div>
+                    <div class="card-footer d-flex flex-wrap gap-2 py-2">
+                        <button class="btn btn-sm btn-primary" id="startBtn" type="button">Start tension test &#9650;</button>
+                        <button class="btn btn-sm btn-eng" id="fastBtn" type="button" disabled>Speed up (past yield)</button>
+                        <button class="btn btn-sm btn-outline-secondary" id="connectBtn" type="button">Connect rig</button>
+                        <button class="btn btn-sm btn-outline-secondary" id="zeroBtn" type="button">Zero load &amp; position</button>
+                        <button class="btn btn-sm btn-outline-secondary" id="potZeroBtn" type="button">Zero position only</button>
+                        <button class="btn btn-sm btn-outline-secondary" id="clearBtn" type="button">Clear data</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ============ RIGHT: STATUS + RESULTS ============ -->
+            <div class="col-lg-3">
+                <div class="card shadow-sm mb-3">
+                    <div class="card-header fw-semibold py-2"><span>Rig status</span></div>
+                    <ul class="list-group list-group-flush small">
+                        <li class="list-group-item d-flex justify-content-between py-2"><span>Motion</span><span class="badge text-bg-secondary" id="s-mv">&mdash;</span></li>
+                        <li class="list-group-item d-flex justify-content-between py-2"><span>Control</span><span class="badge text-bg-secondary" id="s-cl">&mdash;</span></li>
+                        <li class="list-group-item d-flex justify-content-between py-2"><span>Tracking error</span><span class="font-monospace"><span id="r-err">&mdash;</span> &micro;m</span></li>
+                        <li class="list-group-item d-flex justify-content-between py-2"><span>E-stop</span><span class="badge text-bg-secondary" id="s-es">&mdash;</span></li>
+                        <li class="list-group-item d-flex justify-content-between py-2"><span>Top end stop</span><span class="badge text-bg-secondary" id="s-top">&mdash;</span></li>
+                        <li class="list-group-item d-flex justify-content-between py-2"><span>Bottom end stop</span><span class="badge text-bg-secondary" id="s-btm">&mdash;</span></li>
+                        <li class="list-group-item d-flex justify-content-between py-2"><span>Driver temperature</span><span class="badge text-bg-secondary" id="s-ot">&mdash;</span></li>
+                        <li class="list-group-item d-flex justify-content-between py-2"><span>Linear pot</span><span class="badge text-bg-secondary" id="s-pot">&mdash;</span></li>
+                        <li class="list-group-item d-flex justify-content-between py-2"><span>Load cell</span><span class="badge text-bg-secondary" id="s-cell">&mdash;</span></li>
+                    </ul>
+                </div>
+
+                <div class="card shadow-sm">
+                    <div class="card-header fw-semibold py-2"><span>Results</span></div>
+                    <ul class="list-group list-group-flush small">
+                        <li class="list-group-item d-flex justify-content-between py-2"><span>Peak force</span><span class="font-monospace"><span id="r-Fmax">&mdash;</span> N</span></li>
+                        <li class="list-group-item d-flex justify-content-between py-2"><span>Peak stress</span><span class="font-monospace"><span id="r-uts">&mdash;</span> MPa</span></li>
+                        <li class="list-group-item d-flex justify-content-between py-2"><span>RMS tracking error</span><span class="font-monospace"><span id="r-rms">&mdash;</span> &micro;m</span></li>
+                        <li class="list-group-item d-flex justify-content-between py-2"><span>Max tracking error</span><span class="font-monospace"><span id="r-emax">&mdash;</span> &micro;m</span></li>
+                        <li class="list-group-item d-flex justify-content-between py-2"><span>Extension at peak <span class="text-body-secondary">(corr.)</span></span><span class="font-monospace"><span id="r-xpk">&mdash;</span> mm</span></li>
+                        <li class="list-group-item d-flex justify-content-between py-2"><span>Drive lost motion</span><span class="font-monospace"><span id="r-lost">&mdash;</span> mm</span></li>
+                    </ul>
+                    <div class="card-footer d-grid gap-2 py-2">
+                        <button class="btn btn-outline-secondary btn-sm" id="csvBtn" type="button" disabled>Download raw CSV</button>
+                        <button class="btn btn-outline-secondary btn-sm" id="pdfBtn" type="button" disabled>Save graph as PDF</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ============ BOTTOM: SERIAL MONITOR ============ -->
+            <div class="col-12">
+                <div class="card shadow-sm">
+                    <div class="card-header fw-semibold py-2"><span>Serial monitor</span></div>
+                    <div class="card-body py-2">
+                        <pre class="bg-dark text-light small p-2 mb-2 overflow-auto" id="log" style="height: 220px;"></pre>
+                        <div class="input-group input-group-sm">
+                            <input class="form-control font-monospace" type="text" id="cmdIn" placeholder="Type a command, e.g. HELP">
+                            <button class="btn btn-outline-primary" id="sendBtn" type="button">Send</button>
+                            <button class="btn btn-outline-secondary" data-cmd="STATUS" type="button">STATUS</button>
+                            <button class="btn btn-outline-secondary" data-cmd="LOOP" type="button">LOOP</button>
+                            <button class="btn btn-outline-secondary" data-cmd="DRV" type="button">DRV</button>
+                            <button class="btn btn-outline-secondary" data-cmd="HELP" type="button">HELP</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+
+//////////////////////////////////////
+//// WEBSERIAL
+////////////////////////////////////////////
+    const $ = id => document.getElementById(id);
+
+    const MACHINE_K_N_MM = 1108;
+
+    // Measured from the first sample: the pot is zeroed at the ~10 N pre-load, so only the extra force since then stretches the machine
+    const specimenExt = s => (s.ext - samples[0].ext) - (s.f - samples[0].f) / MACHINE_K_N_MM;
+
+   
+    const FRACTURE_DROP_FRAC = 0.15;
+    const FRACTURE_MIN_PEAK_N = 15;
+
+    function specimenArea() {
+        const w = parseFloat($("in-W").value), t = parseFloat($("in-T").value);
+        return (w > 0 && t > 0) ? w * t : NaN;
+    }
+    function specimenGauge() {
+        const L = parseFloat($("in-L").value);
+        return L > 0 ? L : NaN;
+    }
+
+    const STANDARDS = {
+        E8:   { rate: 0.015, note: "ASTM E8/E8M: strain rate 0.015 ± 0.006 min⁻¹.",
+                post: 0.5, postNote: "ASTM E8/E8M after yield: up to 0.5 × reduced-section length per minute." },
+        D638: { speed: 5,    note: "ASTM D638: Type I, speed of testing 5 mm/min." },
+        E9:   { rate: 0.005, note: "ASTM E9: strain rate 0.005 ± 0.002 min⁻¹." },
+        D695: { speed: 1.3,  note: "ASTM D695: speed of testing 1.3 ± 0.3 mm/min." }
+    };
+
+    function crossheadSpeed() {
+        const spec = STANDARDS[$("in-std").value];
+        if (!spec) return NaN;
+        if (spec.speed !== undefined) return spec.speed;    
+        const L = specimenGauge();                       
+        return L > 0 ? spec.rate * L : NaN;
+    }
+
+    function speedNote() {
+        const spec = STANDARDS[$("in-std").value];
+        if (!spec) return "—";
+        if (spec.speed !== undefined) return spec.note;
+        const L = specimenGauge();
+        if (!(L > 0)) return spec.note + " Enter the gauge length to get the speed.";
+        return spec.note + " " + spec.rate + " × " + L.toFixed(2) + " mm gauge.";
+    }
+
+    // Post-yield speed for the Speed up button (NaN if the standard has none)
+    function postYieldSpeed() {
+        const spec = STANDARDS[$("in-std").value];
+        if (!spec || spec.post === undefined) return NaN;
+        const L = specimenGauge();
+        return L > 0 ? Math.min(spec.post * L, 20) : NaN;
+    }
+
+    function postYieldNote() {
+        const spec = STANDARDS[$("in-std").value];
+        if (!spec || spec.post === undefined) return "No post-yield speed change for this standard.";
+        const L = specimenGauge();
+        if (!(L > 0)) return spec.postNote + " Enter the gauge length to get the speed.";
+        return spec.postNote + " " + spec.post + " × " + L.toFixed(2) + " mm.";
+    }
+
+    const metaNum = v => isNaN(v) ? "" : v.toFixed(4);
+
+    function updateSpecimen() {
+        const a = specimenArea();
+        $("d-A").textContent = isNaN(a) ? "—" : a.toFixed(3);
+        const v = crossheadSpeed();
+        $("d-S").textContent     = isNaN(v) ? "—" : v.toFixed(3);
+        const vf = postYieldSpeed();
+        $("d-F").textContent     = isNaN(vf) ? "—" : vf.toFixed(3);
+        updateControls();
+        showResults();
+        drawChart();
+    }
+
+    let port = null, reader = null, writer = null;
+
+    // Current test
+    let testRunning = false;
+    let testStart = 0;        
+    let sawMoving = false;    
+    let fractured = false;    
+    let samples = [];         
+    let peakF = 0;            
+    let peakExt = 0;
+    let speedUpAt = NaN;      // test time (s) when Speed up was pressed, NaN if it wasn't
+    let speedUpTo = NaN;      // speed it was changed to, mm/min
+
+
+    // -----test direction----
+    function isTension() {
+        const std = $("in-std").value;
+        return std === "E8" || std === "D638";
+    }
+
+    function updateControls() {
+        if (testRunning) {
+            $("startBtn").textContent = "Stop test";
+            $("startBtn").className = "btn btn-sm btn-danger";
+        } else {
+            $("startBtn").textContent = isTension() ? "Start tension test ▲" : "Start compression test ▼";
+            $("startBtn").className = "btn btn-sm btn-primary";
+        }
+
+        const vf = postYieldSpeed();
+        $("fastBtn").disabled = !testRunning || !isNaN(speedUpAt) || isNaN(vf) || vf <= crossheadSpeed();
+
+        const canExport = !testRunning && samples.length > 0;
+        $("csvBtn").disabled = !canExport;
+        $("pdfBtn").disabled = !canExport;
+    }
+
+
+    // ------serial monitor-------
+    function log(text) {
+        const box = $("log");
+        box.textContent += text + "\n";
+        // Only keep the most recent text so the monitor doesn't grow forever
+        if (box.textContent.length > 40000) box.textContent = box.textContent.slice(-30000);
+        box.scrollTop = box.scrollHeight;
+    }
+
+    async function send(cmd) {
+        if (!writer) { log("! not connected"); return; }
+        log("> " + cmd);
+        await writer.write(new TextEncoder().encode(cmd + "\n"));
+    }
+
+
+    // ------connect / disconnect-----
+    async function connect() {
+        if (!("serial" in navigator)) { alert("Web Serial needs Chrome or Edge."); return; }
+        try {
+            port = await navigator.serial.requestPort();
+            await port.open({ baudRate: 115200 });
+        } catch (e) {
+            port = null;
+            log("! " + e.message);
+            return;
+        }
+        writer = port.writable.getWriter();
+        reader = port.readable.getReader();
+
+        $("lamp").className = "badge rounded-pill bg-success";
+        $("linkText").textContent = "Rig online";
+        $("connectBtn").textContent = "Disconnect";
+        log("connected (the ESP32 reboots on connect)");
+        readLoop();
+    }
+
+    function disconnect() {
+        if (reader) reader.cancel();
+    }
+
+    async function readLoop() {
+        const decoder = new TextDecoder();
+        let buffer = "";
+        try {
+            while (true) {
+                const { value, done } = await reader.read();
+                if (done) break;
+                buffer += decoder.decode(value, { stream: true });
+                const lines = buffer.split("\n");
+                buffer = lines.pop();  
+                for (const line of lines) {
+                    if (line.trim()) handleLine(line.trim());
+                }
+            }
+        } catch (e) {
+            log("! serial: " + e.message);
+        }
+
+        finishTest("disconnected");
+        reader.releaseLock();
+        writer.releaseLock();
+        try { await port.close(); } catch (e) {}
+        port = reader = writer = null;
+
+        $("lamp").className = "badge rounded-pill bg-light";
+        $("linkText").textContent = "Rig offline";
+        $("connectBtn").textContent = "Connect rig";
+        log("disconnected");
+    }
+
+
+    function handleLine(line) {
+        if (!line.startsWith("T ")) {
+            log(line);
+            if ((line.startsWith("REFUSED") || line.startsWith("STOPPED")) && testRunning && !sawMoving) finishTest("stopped by firmware before moving");
+            return;
+        }
+
+        const d = parseTelemetry(line);
+        showTelemetry(d);
+        if (testRunning) recordSample(d);
+    }
+
+    function parseTelemetry(line) {
+        const d = {};
+        for (const pair of line.slice(2).split(" ")) {
+            const [key, value] = pair.split("=");
+            d[key] = value;
+        }
+        return d;
+    }
+
+    function setBadge(id, text, colour) {
+        $(id).textContent = text;
+        $(id).className = "badge text-bg-" + colour;
+    }
+
+    function showTelemetry(d) {
+        const closedLoop = d.cl === "1";
+
+        $("r-F").textContent = parseFloat(d.f).toFixed(2);
+        $("r-d").textContent = parseFloat(d.ext).toFixed(3);
+        $("r-err").textContent = closedLoop ? parseFloat(d.err).toFixed(1) : "—";
+
+        if (d.mv === "IDLE") setBadge("s-mv", "Stopped", "secondary");
+        else setBadge("s-mv", d.mv + " " + parseFloat(d.v).toFixed(3) + " mm/min", "primary");
+
+        if (closedLoop) setBadge("s-cl", "Closed loop", "primary");
+        else if (d.test && d.test !== "NONE") setBadge("s-cl", "Open loop", "secondary");
+        else setBadge("s-cl", "—", "secondary");
+
+        const estop = d.es === "1";
+        setBadge("s-es", estop ? "LATCHED" : "OK", estop ? "danger" : "success");
+        $("estopAlert").classList.toggle("d-none", !estop);
+
+        setBadge("s-top",  d.top === "1"  ? "HIT" : "clear",    d.top === "1"  ? "warning" : "success");
+        setBadge("s-btm",  d.btm === "1"  ? "HIT" : "clear",    d.btm === "1"  ? "warning" : "success");
+        setBadge("s-pot",  d.pot === "1"  ? "OK" : "no signal", d.pot === "1"  ? "success" : "danger");
+        setBadge("s-cell", d.cell === "1" ? "OK" : "no signal", d.cell === "1" ? "success" : "danger");
+
+        if (d.ot === "2") setBadge("s-ot", "SHUTDOWN", "danger");
+        else if (d.ot === "1") setBadge("s-ot", "WARNING", "warning");
+        else setBadge("s-ot", "OK", "success");
+    }
+
+
+    // ------test-------
+    async function startTest() {
+        if (!writer) { alert("Connect the rig."); return; }
+        const speed = crossheadSpeed();
+        if (isNaN(speed)) { alert("Enter the gauge length first"); return; }
+        if (speed <= 0 || speed > 20) { alert("Crosshead speed works out to " + speed.toFixed(3) + " mm/min"); return; }
+
+        await send($("in-loop").checked ? "LOOP ON" : "LOOP OFF");
+        clearData();
+        testRunning = true;
+        testStart = Date.now();
+        sawMoving = false;
+        send("TEST " + (isTension() ? "TENSION " : "COMPRESSION ") + speed);
+        updateControls();
+    }
+
+    function finishTest(reason) {
+        if (!testRunning) return;
+        testRunning = false;
+        log("test finished: " + reason + " (" + samples.length + " samples)");
+        updateControls();
+        showResults();
+        drawChart();
+    }
+
+    // Operator has seen the curve yield: raise the test speed for the rest of the test
+    function speedUp() {
+        const vf = postYieldSpeed();
+        if (!testRunning || isNaN(vf)) return;
+        speedUpAt = (Date.now() - testStart) / 1000;
+        speedUpTo = vf;
+        send("SPEED " + vf);
+        log("speed up at " + speedUpAt.toFixed(1) + " s to " + vf.toFixed(3) + " mm/min");
+        updateControls();
+    }
+
+    function stopRig() {
+        send("STOP");
+        finishTest("stopped by operator");
+    }
+
+    function recordSample(d) {
+        const f = parseFloat(d.f);
+        const ext = parseFloat(d.ext);
+        const closedLoop = d.cl === "1";
+
+        samples.push({
+            t: (Date.now() - testStart) / 1000,
+            ext: ext,
+            f: f,
+            cmd: parseFloat(d.cmd),
+            err: closedLoop ? parseFloat(d.err) : NaN,   
+            lost: closedLoop ? parseFloat(d.lost) : NaN, 
+            u: parseFloat(d.u),
+            ang: parseFloat(d.ang),
+            mot: parseFloat(d.mot),
+            cl: closedLoop ? 1 : 0
+        });
+
+        if (Math.abs(f) > peakF) {
+            peakF = Math.abs(f);
+            peakExt = specimenExt({ ext: ext, f: f }); 
+        }
+        if (d.mv !== "IDLE") sawMoving = true;
+
+        $("sampleCount").textContent = samples.length + " samples";
+        showResults();
+        drawChart();
+
+        if (peakF > FRACTURE_MIN_PEAK_N && Math.abs(f) < FRACTURE_DROP_FRAC * peakF) {
+            send("STOP");
+            fractured = true;
+            finishTest("fracture detected");
+        }
+
+        else if (d.mv === "IDLE" && sawMoving) {
+            finishTest("rig stopped");
+        }
+    }
+
+    function clearData() {
+        samples = [];
+        peakF = 0;
+        peakExt = 0;
+        fractured = false;
+        speedUpAt = NaN;
+        speedUpTo = NaN;
+        $("sampleCount").textContent = "0 samples";
+        showResults();
+        drawChart();
+        updateControls();
+    }
+
+
+    // ------results panel--------
+    function showResults() {
+        const area = specimenArea();
+        const havePeak = peakF > 0;
+        $("r-Fmax").textContent = havePeak ? peakF.toFixed(1) : "—";
+        $("r-uts").textContent  = havePeak && area > 0 ? (peakF / area).toFixed(1) : "—";
+        $("r-xpk").textContent  = havePeak ? peakExt.toFixed(4) : "—";
+
+        const end = fractured ? samples.length - 6 : samples.length;
+        let sumOfSquares = 0, count = 0, maxErr = 0, maxLost = null;
+        for (let i = 0; i < end; i++) {
+            const s = samples[i];
+            if (!isNaN(s.err)) {
+                sumOfSquares += s.err * s.err;
+                count++;
+                maxErr = Math.max(maxErr, Math.abs(s.err));
+            }
+            if (!isNaN(s.lost) && (maxLost === null || s.lost > maxLost)) maxLost = s.lost;
+        }
+        $("r-rms").textContent  = count > 0 ? Math.sqrt(sumOfSquares / count).toFixed(1) : "—";
+        $("r-emax").textContent = count > 0 ? maxErr.toFixed(1) : "—";
+        $("r-lost").textContent = maxLost !== null ? maxLost.toFixed(3) : "—";
+    }
+
+    function gridStep(range) {
+        const rough = range / 5;
+        const power = Math.pow(10, Math.floor(Math.log10(rough)));
+        const n = rough / power;                                    
+        if (n < 1.5) return power;
+        if (n < 3) return 2 * power;
+        if (n < 7) return 5 * power;
+        return 10 * power;
+    }
+
+    function drawChart() {
+        const canvas = $("chart");
+        const ctx = canvas.getContext("2d");
+        canvas.width = canvas.clientWidth;    // match the on-screen width so nothing gets stretched
+        const W = canvas.width, H = canvas.height;
+        const left = 55, right = 15, top = 10, bottom = 35;    // margins, leaving room for the labels
+        ctx.clearRect(0, 0, W, H);
+
+        // Stress-strain when the specimen size is filled in, otherwise force-extension
+        const area = specimenArea();
+        const gauge = specimenGauge();
+        let points, xLabel, yLabel;
+        // Both x axes use the specimen extension, i.e. the pot reading with the
+        // machine's own stretch (F / MACHINE_K_N_MM) removed.
+        if (area > 0 && gauge > 0) {
+            $("chartTitle").textContent = "Stress – strain";
+            xLabel = "Strain (%) — crosshead extension";
+            yLabel = "Stress (MPa)";
+            points = samples.map(s => ({ x: specimenExt(s) / gauge * 100, y: s.f / area }));
+        } else {
+            $("chartTitle").textContent = "Force – extension";
+            xLabel = "Extension (mm) — compliance-corrected";
+            yLabel = "Force (N)";
+            points = samples.map(s => ({ x: specimenExt(s), y: s.f }));
+        }
+
+        let xMin = 0, xMax = 1, yMin = 0, yMax = 1;
+        for (const p of points) {
+            xMin = Math.min(xMin, p.x);
+            xMax = Math.max(xMax, p.x);
+            yMin = Math.min(yMin, p.y);
+            yMax = Math.max(yMax, p.y);
+        }
+
+        const toPixelX = x => left + (x - xMin) / (xMax - xMin) * (W - left - right);
+        const toPixelY = y => H - bottom - (y - yMin) / (yMax - yMin) * (H - top - bottom);
+
+        ctx.font = "11px Raleway, sans-serif";
+        ctx.strokeStyle = "#dee2e6";
+        ctx.fillStyle = "#6c757d";
+        ctx.lineWidth = 1;
+        const xStep = gridStep(xMax - xMin);
+        const yStep = gridStep(yMax - yMin);
+        for (let x = Math.ceil(xMin / xStep) * xStep; x <= xMax; x += xStep) {
+            ctx.beginPath();
+            ctx.moveTo(toPixelX(x), top);
+            ctx.lineTo(toPixelX(x), H - bottom);
+            ctx.stroke();
+            ctx.fillText(Number(x.toFixed(3)), toPixelX(x) - 8, H - bottom + 14);
+        }
+        for (let y = Math.ceil(yMin / yStep) * yStep; y <= yMax; y += yStep) {
+            ctx.beginPath();
+            ctx.moveTo(left, toPixelY(y));
+            ctx.lineTo(W - right, toPixelY(y));
+            ctx.stroke();
+            ctx.fillText(Number(y.toFixed(3)), 5, toPixelY(y) + 4);
+        }
+        ctx.fillText(xLabel, left, H - 5);
+        ctx.fillText(yLabel, left + 5, top + 12);
+
+        // The data
+        ctx.strokeStyle = "#61223B";
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        for (let i = 0; i < points.length; i++) {
+            const x = toPixelX(points[i].x);
+            const y = toPixelY(points[i].y);
+            if (i === 0) ctx.moveTo(x, y);
+            else ctx.lineTo(x, y);
+        }
+        ctx.stroke();
+    }
+
+    //-------export--------
+    function timestamp() {
+        const d = new Date();
+        const two = n => String(n).padStart(2, "0");
+        return d.getFullYear() + two(d.getMonth() + 1) + two(d.getDate()) + "-"
+             + two(d.getHours()) + two(d.getMinutes()) + two(d.getSeconds());
+    }
+
+    function downloadCsv() {
+        const header = [
+            "# Miniature tension / compression testing rig",
+            "# Stellenbosch University - Mechanical Project 478 - Reuben Louw 26896850",
+            "# exported," + new Date().toISOString(),
+            "# standard," + $("in-std").value,
+            "# test," + (isTension() ? "TENSION" : "COMPRESSION"),
+            "# width_mm," + $("in-W").value,
+            "# thickness_mm," + $("in-T").value,
+            "# area_mm2," + metaNum(specimenArea()),
+            "# gauge_length_mm," + metaNum(specimenGauge()),
+            "# crosshead_speed_mm_per_min," + metaNum(crossheadSpeed()),
+            "# speed_rule," + speedNote(),
+            "# post_yield_speed_mm_per_min," + metaNum(speedUpTo),
+            "# speed_up_at_s," + (isNaN(speedUpAt) ? "not used" : speedUpAt.toFixed(1)),
+            "# force_sign,tension positive (firmware v2)",
+            "# control," + ($("in-loop").checked ? "closed loop (commanded_mm = reference ramp)" : "open loop"),
+            "# machine_compliance_N_per_mm," + MACHINE_K_N_MM,
+            "# note,extension_mm is the raw pot reading; specimen_ext_mm = extension_mm - force_N / machine_compliance",
+            "time_s,extension_mm,force_N,commanded_mm,error_um,motor_mm_min,screw_deg,loop,motor_mm,lost_mm,specimen_ext_mm"
+        ];
+
+        const num = (value, decimals) => isNaN(value) ? "" : value.toFixed(decimals);
+
+        const rows = samples.map(s => [
+            num(s.t, 3), num(s.ext, 4), num(s.f, 2), num(s.cmd, 4), num(s.err, 1), num(s.u, 4),
+            num(s.ang, 1), s.cl, num(s.mot, 4), num(s.lost, 4), num(specimenExt(s), 4)
+        ].join(","));
+
+        const blob = new Blob(["﻿" + header.concat(rows).join("\n")], { type: "text/csv;charset=utf-8" });
+        const link = document.createElement("a");
+        link.href = URL.createObjectURL(blob);
+        link.download = "utm-" + timestamp() + ".csv";
+        link.click();
+    }
+
+    function saveChartPdf() {
+        const win = window.open("");
+        win.document.write("<title>utm-" + timestamp() + "</title><img src='" + $("chart").toDataURL() + "' style='width:100%'>");
+        win.document.close();
+        setTimeout(() => win.print(), 300);    // give the image a moment to load
+    }
+
+
+    // ---------- buttons ----------
+    $("connectBtn").addEventListener("click", () => {
+        if (port) disconnect();
+        else connect();
+    });
+    $("startBtn").addEventListener("click", () => {
+        if (testRunning) stopRig();
+        else startTest();
+    });
+    $("stopBtn").addEventListener("click", stopRig);
+    $("fastBtn").addEventListener("click", speedUp);
+    document.addEventListener("keydown", e => { if (e.key === "Escape") stopRig(); });
+
+    $("jogUp").addEventListener("click",    () => send("JOG UP "   + $("in-jogstep").value + " " + $("in-jogspeed").value));
+    $("jogDown").addEventListener("click",  () => send("JOG DOWN " + $("in-jogstep").value + " " + $("in-jogspeed").value));
+    $("moveUp").addEventListener("click",   () => send("UP "   + $("in-jogspeed").value));
+    $("moveDown").addEventListener("click", () => send("DOWN " + $("in-jogspeed").value));
+
+    $("zeroBtn").addEventListener("click", () => send("TARE"));
+    $("potZeroBtn").addEventListener("click", () => send("POT TARE"));
+    $("resumeBtn").addEventListener("click", () => send("RESUME"));
+    $("clearBtn").addEventListener("click", clearData);
+    $("csvBtn").addEventListener("click", downloadCsv);
+    $("pdfBtn").addEventListener("click", saveChartPdf);
+    $("in-std").addEventListener("change", () => { updateControls(); updateSpecimen(); });
+    window.addEventListener("resize", drawChart);
+
+    // Serial monitor: typed commands, plus the quick buttons (STATUS, LOOP, ...) that send their data-cmd text
+    function sendTypedCommand() {
+        const cmd = $("cmdIn").value.trim();
+        if (cmd) send(cmd);
+        $("cmdIn").value = "";
+    }
+    $("sendBtn").addEventListener("click", sendTypedCommand);
+    $("cmdIn").addEventListener("keydown", e => { if (e.key === "Enter") sendTypedCommand(); });
+    document.querySelectorAll("[data-cmd]").forEach(btn => btn.addEventListener("click", () => send(btn.dataset.cmd)));
+
+    $("in-W").addEventListener("input", updateSpecimen);
+    $("in-T").addEventListener("input", updateSpecimen);
+    $("in-L").addEventListener("input", updateSpecimen);
+
+    updateControls();
+    updateSpecimen(); 
+    </script>
+</body>
+
+</html>
